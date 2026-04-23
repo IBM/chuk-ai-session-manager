@@ -20,7 +20,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from collections import OrderedDict
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
@@ -39,7 +39,7 @@ class PackedContext(BaseModel):
     # Metadata
     page_ids: list[str] = Field(default_factory=list, description="Pages included")
     tokens_used: int = Field(default=0)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Cache key components (for debugging)
     session_id: str = Field(default="")
@@ -52,7 +52,7 @@ class CacheEntry(BaseModel):
     """Internal cache entry with LRU tracking."""
 
     packed: PackedContext
-    last_accessed: datetime = Field(default_factory=datetime.utcnow)
+    last_accessed: datetime = Field(default_factory=lambda: datetime.now(UTC))
     access_count: int = Field(default=0)
 
 
@@ -128,7 +128,7 @@ class ContextPackCache:
         self._cache.move_to_end(key)
 
         entry = self._cache[key]
-        entry.last_accessed = datetime.utcnow()
+        entry.last_accessed = datetime.now(UTC)
         entry.access_count += 1
 
         self._stats["hits"] += 1

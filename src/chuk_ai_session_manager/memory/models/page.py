@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -83,8 +83,8 @@ class MemoryPage(BaseModel):
     size_tokens: int | None = Field(default=None, description="Estimated token count (for text/transcript)")
 
     # Access tracking (for LRU/eviction)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    last_accessed: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    last_accessed: datetime = Field(default_factory=lambda: datetime.now(UTC))
     access_count: int = Field(default=0, description="Number of times accessed")
 
     # Importance (affects eviction priority)
@@ -115,7 +115,7 @@ class MemoryPage(BaseModel):
 
     def mark_accessed(self) -> None:
         """Update access tracking."""
-        self.last_accessed = datetime.utcnow()
+        self.last_accessed = datetime.now(UTC)
         self.access_count += 1
 
     def mark_dirty(self) -> None:
@@ -178,7 +178,7 @@ class PageTableEntry(BaseModel):
     last_flushed: datetime | None = Field(default=None)
 
     # Access tracking
-    last_accessed: datetime = Field(default_factory=datetime.utcnow)
+    last_accessed: datetime = Field(default_factory=lambda: datetime.now(UTC))
     access_count: int = Field(default=0)
 
     # Size
@@ -192,7 +192,7 @@ class PageTableEntry(BaseModel):
 
     def mark_accessed(self) -> None:
         """Update access tracking."""
-        self.last_accessed = datetime.utcnow()
+        self.last_accessed = datetime.now(UTC)
         self.access_count += 1
 
     @property

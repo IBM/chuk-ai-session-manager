@@ -493,8 +493,8 @@ class PageSearchHandler(BaseModel):
                 results.append(
                     SearchResultEntry(
                         page_id=page_id,
-                        modality=entry.modality.value,
-                        tier=entry.tier.value,
+                        modality=entry.modality,
+                        tier=entry.tier,
                         levels=ALL_COMPRESSION_LEVELS,
                         hint=hint,
                         relevance=relevance,

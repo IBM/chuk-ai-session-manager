@@ -17,7 +17,7 @@ Design principles:
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field, PrivateAttr
 
@@ -34,6 +34,14 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 
+def _make_tier_index() -> dict[StorageTier, set[str]]:
+    return {t: set() for t in StorageTier}
+
+
+def _make_modality_index() -> dict[Modality, set[str]]:
+    return {m: set() for m in Modality}
+
+
 class PageTable(BaseModel):
     """
     Maps page IDs to their current location and state.
@@ -48,8 +56,8 @@ class PageTable(BaseModel):
     entries: dict[str, PageTableEntry] = Field(default_factory=dict)
 
     # Indexes for fast lookup - use PrivateAttr for internal state
-    _by_tier: dict[StorageTier, set[str]] = PrivateAttr(default_factory=lambda: {t: set() for t in StorageTier})
-    _by_modality: dict[Modality, set[str]] = PrivateAttr(default_factory=lambda: {m: set() for m in Modality})
+    _by_tier: dict[StorageTier, set[str]] = PrivateAttr(default_factory=_make_tier_index)
+    _by_modality: dict[Modality, set[str]] = PrivateAttr(default_factory=_make_modality_index)
     _dirty_pages: set[str] = PrivateAttr(default_factory=set)
 
     model_config = {"arbitrary_types_allowed": True}
@@ -223,7 +231,7 @@ class PageTable(BaseModel):
             return False
 
         entry.dirty = False
-        entry.last_flushed = datetime.utcnow()
+        entry.last_flushed = datetime.now(UTC)
         self._dirty_pages.discard(page_id)
         return True
 

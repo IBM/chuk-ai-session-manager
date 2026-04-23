@@ -6,6 +6,7 @@ Tests SessionStorage, ChukSessionsStore, and related storage operations.
 """
 
 import json
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -66,6 +67,17 @@ async def mock_chuk_session_manager(sample_session_data):
     mock.extend_session_ttl = AsyncMock(return_value=True)
     # get_cache_stats is synchronous - explicitly make it a regular mock
     mock.get_cache_stats = MagicMock(return_value={"cache_size": 10, "hit_rate": 0.8})
+
+    # session_factory returns an async context manager (used by index methods)
+    mock_sess = AsyncMock()
+    mock_sess.get = AsyncMock(return_value=None)
+    mock_sess.set = AsyncMock()
+
+    @asynccontextmanager
+    async def _fake_factory():
+        yield mock_sess
+
+    mock.session_factory = _fake_factory
     return mock
 
 

@@ -32,6 +32,7 @@ from chuk_ai_session_manager.models.session import Session
 logger = logging.getLogger(__name__)
 
 SESSION_TYPE = "ai_session_manager"
+_INDEX_KEY_PREFIX = "ai_session_manager:index"
 
 
 class SessionStorageStats(DictCompatModel):
@@ -55,6 +56,7 @@ class SessionStorage:
         self.chuk = ChukSessionManager(sandbox_id=sandbox_id, default_ttl_hours=default_ttl_hours)
         self.sandbox_id = sandbox_id
         self._cache: dict[str, Session] = {}
+        self._index_key = f"{_INDEX_KEY_PREFIX}:{sandbox_id}"
 
         logger.info(f"AI Session Manager using CHUK Sessions (sandbox: {sandbox_id})")
 
@@ -89,6 +91,31 @@ class SessionStorage:
             logger.error(f"Failed to get AI session {session_id}: {e}")
             return None
 
+    async def _get_index_ids(self) -> set[str]:
+        """Load the persisted session ID index from backend storage."""
+        try:
+            async with self.chuk.session_factory() as sess:
+                data = await sess.get(self._index_key)
+                if data:
+                    return set(json.loads(data))
+        except Exception:
+            pass
+        return set()
+
+    async def _update_index(self, session_id: str, *, remove: bool = False) -> None:
+        """Add or remove a session ID from the persisted backend index (best-effort)."""
+        try:
+            async with self.chuk.session_factory() as sess:
+                data = await sess.get(self._index_key)
+                ids: set[str] = set(json.loads(data)) if data else set()
+                if remove:
+                    ids.discard(session_id)
+                else:
+                    ids.add(session_id)
+                await sess.set(self._index_key, json.dumps(sorted(ids)))
+        except Exception as e:
+            logger.debug(f"Session index update skipped: {e}")
+
     async def save(self, session: Session) -> None:
         """Save AI session to CHUK Sessions."""
         try:
@@ -110,6 +137,8 @@ class SessionStorage:
             logger.error(f"Failed to save AI session {session.id}: {e}")
             raise
 
+        await self._update_index(session.id)
+
     async def delete(self, session_id: str) -> None:
         """Delete AI session."""
         try:
@@ -119,12 +148,19 @@ class SessionStorage:
             logger.error(f"Failed to delete AI session {session_id}: {e}")
             raise
 
+        await self._update_index(session_id, remove=True)
+
     async def list_sessions(self, prefix: str = "") -> list[str]:
-        """List AI session IDs."""
-        session_ids = list(self._cache.keys())
+        """List AI session IDs from both the backend index and the local cache.
+
+        The backend index persists across process restarts; the local cache
+        captures any sessions saved in the current process that may not yet
+        be reflected in the index on the first call.
+        """
+        ids = set(self._cache.keys()) | await self._get_index_ids()
         if prefix:
-            session_ids = [sid for sid in session_ids if sid.startswith(prefix)]
-        return session_ids
+            ids = {sid for sid in ids if sid.startswith(prefix)}
+        return sorted(ids)
 
     def _extract_user_id(self, session: Session) -> str | None:
         """Extract user ID from AI session metadata."""

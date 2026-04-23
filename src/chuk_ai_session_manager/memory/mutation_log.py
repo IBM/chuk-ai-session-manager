@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 import uuid
 from collections import defaultdict
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field, PrivateAttr
 
@@ -31,12 +31,16 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 
+def _make_by_page() -> dict[str, list[PageMutation]]:
+    return defaultdict(list)
+
+
 class ContextSnapshot(BaseModel):
     """Snapshot of what pages were in context at a given turn."""
 
     turn: int
     page_ids: list[str] = Field(default_factory=list)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class MutationLogLite(BaseModel):
@@ -55,7 +59,7 @@ class MutationLogLite(BaseModel):
     _mutations: list[PageMutation] = PrivateAttr(default_factory=list)
 
     # Index: page_id -> list of mutations
-    _by_page: dict[str, list[PageMutation]] = PrivateAttr(default_factory=lambda: defaultdict(list))
+    _by_page: dict[str, list[PageMutation]] = PrivateAttr(default_factory=_make_by_page)
 
     # Context snapshots per turn
     _context_snapshots: dict[int, ContextSnapshot] = PrivateAttr(default_factory=dict)

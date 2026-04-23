@@ -211,6 +211,3 @@ class SearchTool:
             "results": selected_results,
             "timestamp": datetime.now().isoformat(),
         }
-
-
-print("✅ sample_tools.py: 3 tools defined with @register_tool decorator (corrected version)")

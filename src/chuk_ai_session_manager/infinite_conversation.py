@@ -128,8 +128,8 @@ class InfiniteConversationManager:
             summary_event = SessionEvent(message=summary, source=EventSource.SYSTEM, type=EventType.SUMMARY)
             await session.add_event_and_save(summary_event)
 
-            # Create a new session with the current as parent
-            new_session = await Session.create(parent_id=session_id)
+            # Create a new session with the current as parent, using the same store
+            new_session = await Session.create(parent_id=session_id, store=store)
 
             # Return the new session ID
             return new_session.id

@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field
@@ -164,7 +164,7 @@ class ImportanceWeightedLRU:
     def _score_l1(self, context: EvictionContext) -> list[EvictionCandidate]:
         candidates: list[EvictionCandidate] = []
         cfg = self.config
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         for page_id, page in context.l1_pages.items():
             if page_id in context.pinned_page_ids or page.pinned:
@@ -222,7 +222,7 @@ class LRUEvictionPolicy:
                 score = i / max(len(context.l0_page_ids), 1)
                 candidates.append(EvictionCandidate(page_id=page_id, score=score))
         else:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             for page_id, page in context.l1_pages.items():
                 if page_id in context.pinned_page_ids or page.pinned:
                     continue

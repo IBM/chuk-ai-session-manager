@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chuk-ai-session-manager"
-version = "0.11"
+version = "0.11.1"
 description = "Session manager for AI applications"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -15,6 +15,7 @@ dependencies = [
     "chuk-sessions>=0.6.1",
     "chuk-tool-processor>=0.20.1",
     "pydantic>=2.11.3",
+    "python-dotenv>=1.0.0",
 ]
 
 # Optional dependencies

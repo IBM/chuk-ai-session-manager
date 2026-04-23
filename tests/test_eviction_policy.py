@@ -12,7 +12,7 @@ Covers:
 """
 
 import math
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -74,7 +74,7 @@ def _make_l1_page(
     pinned: bool = False,
 ) -> MemoryPage:
     """Create a MemoryPage suitable for L1 scoring tests."""
-    accessed = datetime.utcnow() - timedelta(hours=age_hours)
+    accessed = datetime.now(UTC) - timedelta(hours=age_hours)
     return MemoryPage(
         page_id=page_id,
         modality=modality,

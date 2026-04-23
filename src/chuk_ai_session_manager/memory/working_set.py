@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field, PrivateAttr
@@ -484,7 +484,7 @@ class WorkingSetManager(BaseModel):
                 candidates.append((page_id, score))
         else:
             # For L1, we have full pages with access tracking
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             for page_id, page in self.l1_cache.items():
                 # Skip pinned pages
                 if self.pinned_set.is_pinned(page_id) or page.pinned:

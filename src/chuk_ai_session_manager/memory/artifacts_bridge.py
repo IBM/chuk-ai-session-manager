@@ -17,7 +17,7 @@ Design principles:
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 from pydantic import BaseModel, Field
@@ -377,7 +377,7 @@ class ArtifactsBridge(BaseModel):
         # Create checkpoint manifest
         manifest = CheckpointManifest(
             name=checkpoint_name,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             page_count=len(pages),
             pages=[],
         )

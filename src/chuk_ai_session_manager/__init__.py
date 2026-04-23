@@ -44,9 +44,13 @@ Storage Configuration:
 """
 
 import logging
+from importlib.metadata import PackageNotFoundError as _PackageNotFoundError
+from importlib.metadata import version as _pkg_version
 
-# Package version
-__version__ = "0.8"
+try:
+    __version__ = _pkg_version("chuk-ai-session-manager")
+except _PackageNotFoundError:
+    __version__ = "0.11.1"
 
 # Set up package-level logger
 logger = logging.getLogger(__name__)

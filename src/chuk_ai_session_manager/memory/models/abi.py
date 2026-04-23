@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
@@ -89,7 +89,7 @@ class RecallAttempt(BaseModel):
     query: str  # What user asked to recall
     page_ids_cited: list[str] = Field(default_factory=list)
     user_corrected: bool = Field(default=False)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class UserExperienceMetrics(BaseModel):

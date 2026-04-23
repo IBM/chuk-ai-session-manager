@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
@@ -63,7 +63,7 @@ class FaultRecord(BaseModel):
     turn: int
     tokens_loaded: int
     latency_ms: float = Field(default=0.0)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 # =============================================================================
@@ -82,7 +82,7 @@ class PageMutation(BaseModel):
 
     mutation_id: str
     page_id: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     turn: int = Field(default=0)
 
     mutation_type: MutationType

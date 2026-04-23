@@ -13,16 +13,8 @@ from typing import Any, Dict, Optional
 
 from dotenv import load_dotenv
 
-# CHUK LLM simple functions
-from chuk_llm import (
-    # Async functions (recommended)
-    ask_anthropic_claude_sonnet4_20250514,
-    ask_anthropic_sonnet,
-    ask_anthropic_sync,
-    ask_openai_gpt4o_mini,
-    ask_openai_sync,
-    ask_sync,
-)
+# CHUK LLM simple functions (v0.19+ unified API)
+from chuk_llm import ask, ask_sync
 
 # Session manager imports - FIXED for current architecture
 from chuk_ai_session_manager.models.event_source import EventSource
@@ -117,24 +109,24 @@ class TrackedLLM:
     # OpenAI functions with tracking
     async def ask_openai_gpt4o_mini(self, question: str, **kwargs) -> str:
         """Ask OpenAI GPT-4o Mini with session tracking."""
-        response = await ask_openai_gpt4o_mini(question, **kwargs)
+        response = await ask(question, provider="openai", model="gpt-4o-mini", **kwargs)
         await self._track_interaction(question, response, "openai", "gpt-4o-mini")
         return response
 
     # Anthropic functions with tracking
     async def ask_anthropic_sonnet(self, question: str, **kwargs) -> str:
         """Ask Anthropic Claude Sonnet with session tracking."""
-        response = await ask_anthropic_sonnet(question, **kwargs)
+        response = await ask(question, provider="anthropic", model="claude-sonnet-4-5", **kwargs)
         await self._track_interaction(
-            question, response, "anthropic", "claude-sonnet-4"
+            question, response, "anthropic", "claude-sonnet-4-5"
         )
         return response
 
     async def ask_anthropic_claude_sonnet4(self, question: str, **kwargs) -> str:
         """Ask Anthropic Claude Sonnet 4 with session tracking."""
-        response = await ask_anthropic_claude_sonnet4_20250514(question, **kwargs)
+        response = await ask(question, provider="anthropic", model="claude-sonnet-4-5", **kwargs)
         await self._track_interaction(
-            question, response, "anthropic", "claude-sonnet-4-20250514"
+            question, response, "anthropic", "claude-sonnet-4-5"
         )
         return response
 
@@ -167,12 +159,7 @@ class TrackedLLM:
     # Sync function wrapper (for compatibility)
     def ask_sync_tracked(self, question: str, provider: str = "openai") -> str:
         """Synchronous ask with tracking (creates new event loop if needed)."""
-        if provider == "openai":
-            response = ask_openai_sync(question)
-        elif provider == "anthropic":
-            response = ask_anthropic_sync(question)
-        else:
-            response = ask_sync(question)
+        response = ask_sync(question, provider=provider)
 
         # Track in background (requires running event loop)
         asyncio.create_task(
@@ -278,10 +265,10 @@ async def demonstrate_conversation_vs_simple():
     print("✅ Pros: Easy to use, no context management, great for one-offs")
     print("🔶 Trade-offs: No conversation memory, each call is independent")
 
-    response1 = await ask_openai_gpt4o_mini("My name is Alice")
+    response1 = await ask("My name is Alice", provider="openai", model="gpt-4o-mini")
     print(f"Call 1: {response1}")
 
-    response2 = await ask_openai_gpt4o_mini("What's my name?")
+    response2 = await ask("What's my name?", provider="openai", model="gpt-4o-mini")
     print(f"Call 2: {response2}")  # Won't remember Alice
 
     print("\n📌 With Session Tracking (Stateful-like):")
@@ -320,7 +307,7 @@ Assistant: Nice to meet you, Alice!
 
 Current question: What's my name?"""
 
-    response = await ask_openai_gpt4o_mini(context_prompt)
+    response = await ask(context_prompt, provider="openai", model="gpt-4o-mini")
     print(f"Context-aware response: {response}")
 
 
